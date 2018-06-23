@@ -4,6 +4,7 @@
 #include <cmath>
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 
 using namespace std;
 
@@ -79,7 +80,7 @@ unsigned TrainingData::getTargetOutputs(vector<double> &targetOutputVals)
     stringstream ss(line);
 
     string label;
-    ss>> label;
+    ss >> label;
     if (label.compare("out:") == 0) {
         double oneValue;
         while (ss >> oneValue) {
@@ -176,13 +177,27 @@ void Neuron::calcOutputGradients(double targetVals) {
 
 double Neuron::activationFunction(double x) {
     // TAHN (hyperbolic tangent)
-    x = tanh(x);
+    //x = tanh(x);
+
+    //SIGMOID
+    x = 1/(1+exp(-x));
+
+    //RELU
+    //x = max(0.0, x);
+
     return x;
 }
 
 double Neuron::activationFunctionDerivative(double x) {
     //TAHN DERIVATIVE
-    x = 1.0 - x*x;
+    //x = 1.0 - x*x;
+
+    //SIGMOID DERIVATIVE
+    x = (1/(1+exp(-x)))*(1 - (1/(1+exp(-x))));
+
+    //RELU DERIVATIVE
+    //x = x > 0.0 ? 1.0 : 0.0;
+
     return x;
 }
 
@@ -232,7 +247,8 @@ void Net::getResults(vector<double> &resultVals) const{
     resultVals.clear();
 
     for (unsigned n=0; n < m_layers.back().size() - 1; ++n){
-        resultVals.push_back(m_layers.back()[n].getOutputVal());
+        double a = m_layers.back()[n].getOutputVal() > 0.5 ? 0.0 : 1.0;
+        resultVals.push_back(a);
     }
 }
 
@@ -257,11 +273,11 @@ void Net::backProp (const std::vector<double> &targetVals) {
     }
 
     // calculate gradients on hidden layers
-    for (unsigned layerNum = m_layers.size() - 2; layerNum > 0; --layerNum){
+    for (unsigned layerNum = m_layers.size() - 2; layerNum < m_layers.size(); --layerNum){
         Layer &hiddenLayer = m_layers[layerNum];
         Layer &nextLayer = m_layers[layerNum + 1];
 
-        for (unsigned n =0; n<hiddenLayer.size(); ++n){
+        for (unsigned n =0; n < hiddenLayer.size(); ++n){
             hiddenLayer[n].calcHiddenGradients(nextLayer);
         }
     }
@@ -278,9 +294,9 @@ void Net::backProp (const std::vector<double> &targetVals) {
 
 void Net::feedForward (const vector<double> &inputVals) {
     // Check the num of inputVals euqal to neuronnum expect bias
-    assert(inputVals.size() == m_layers[0].size() - 1);
+    //assert(inputVals.size() == m_layers[0].size() - 1);
     // Assign the input values into the input neurons
-    for (unsigned i=0; i<inputVals.size(); ++i){
+    for (unsigned i=0; i < inputVals.size(); ++i){
         m_layers[0][i].setOutputVal(inputVals[i]);
     }
 
@@ -301,7 +317,7 @@ Net::Net(const vector<unsigned> &topology){
     for (unsigned layerNum =0; layerNum < numLayers; ++layerNum){
         //this loop creates layers
         m_layers.push_back(Layer());
-        unsigned numOutputs = layerNum == topology.size() - 1 ? 0 :topology[layerNum + 1];
+        unsigned numOutputs = layerNum == topology.size() - 1 ? 0 : topology[layerNum + 1];
 
         for (unsigned neuronNum =0; neuronNum <= topology[layerNum]; ++neuronNum){
             //this loop creates neurons for each layer
@@ -372,5 +388,5 @@ int main()
              << myNet.getRecentAverageError() << endl;
     }
 
-    cout << endl << "Done" << endl;
+    cout << endl << "Done :)" << endl;
 }
