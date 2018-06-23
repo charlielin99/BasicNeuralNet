@@ -166,17 +166,24 @@ void Neuron::calcHiddenGradients(const Layer &nextLayer){
 
 void Neuron::calcOutputGradients(double targetVals) {
     double delta = targetVals - m_outputVal;
-    m_gradient = delta * Neuron::activationFunctionDerivative(m_outputVal);
+
+    //CROSS ENTROPY
+    m_gradient = targetVals - m_outputVal;
+
+    //MEAN SQUARED ERROR
+    //m_gradient = delta * Neuron::activationFunctionDerivative(m_outputVal);
 }
 
 double Neuron::activationFunction(double x) {
-    // using the tanh
-
-    return tanh(x);
+    // TAHN (hyperbolic tangent)
+    x = tanh(x);
+    return x;
 }
 
 double Neuron::activationFunctionDerivative(double x) {
-    return 1.0 - x*x;
+    //TAHN DERIVATIVE
+    x = 1.0 - x*x;
+    return x;
 }
 
 void Neuron::feedForward(const Layer &prevLayer) {
